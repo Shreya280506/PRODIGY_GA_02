@@ -60,9 +60,9 @@ with left:
 
     steps = st.slider(
         "Inference Steps",
-        min_value=5,
-        max_value=20,
-        value=10
+        min_value=1,
+        max_value=4,
+        value=4
     )
 
     generate = st.button(
@@ -128,10 +128,11 @@ if generate:
         )
 
     except Exception as e:
-
-        st.error(
-            f"Image generation failed: {e}"
-        )
+    st.error(f"Image generation failed: {e}")
+    st.info(
+        "Please check your image-generation API configuration "
+        "and account balance."
+    )
 
         st.info(
             "The model may be unavailable on the current "
