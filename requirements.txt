@@ -1,7 +1,9 @@
 streamlit
 torch
+torchvision
 transformers
 diffusers
 pillow
 python-dotenv
 accelerate
+safetensors
