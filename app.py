@@ -1,3 +1,5 @@
+import io
+
 import streamlit as st
 
 from generator import ImageGenerator
@@ -5,35 +7,26 @@ from utils import save_image
 from history import save_history
 from styles import STYLE_PRESETS
 
-# -----------------------------
-# Page Configuration
-# -----------------------------
+
 st.set_page_config(
     page_title="VisionCraft AI",
     page_icon="🎨",
     layout="wide"
 )
 
-# -----------------------------
-# Load Stable Diffusion Model
-# -----------------------------
+
 @st.cache_resource
 def load_generator():
     return ImageGenerator()
 
-generator = load_generator()
 
-# -----------------------------
-# Header
-# -----------------------------
 st.title("🎨 VisionCraft AI")
-st.markdown("Generate stunning AI images using **Stable Diffusion**")
+st.markdown(
+    "Generate stunning AI images using **Stable Diffusion**."
+)
 
 st.divider()
 
-# -----------------------------
-# Layout
-# -----------------------------
 left, right = st.columns([1, 1])
 
 with left:
@@ -69,13 +62,15 @@ with left:
         "Inference Steps",
         min_value=10,
         max_value=50,
-        value=30
+        value=20
     )
 
     generate = st.button(
         "🚀 Generate Image",
-        use_container_width=True
+        use_container_width=True,
+        type="primary"
     )
+
 
 with right:
 
@@ -83,42 +78,47 @@ with right:
 
     image_placeholder = st.empty()
 
-# -----------------------------
-# Generate Image
-# -----------------------------
+
 if generate:
 
-    if prompt.strip() == "":
+    if not prompt.strip():
         st.warning("Please enter a prompt.")
         st.stop()
 
     final_prompt = f"{prompt}, {STYLE_PRESETS[style]}"
 
-    with st.spinner("Generating image..."):
+    try:
 
-        image = generator.generate(
-            prompt=final_prompt,
-            negative_prompt=negative_prompt,
-            guidance_scale=guidance,
-            steps=steps
+        with st.spinner(
+            "Loading Stable Diffusion and generating your image..."
+        ):
+
+            generator = load_generator()
+
+            image = generator.generate(
+                prompt=final_prompt,
+                negative_prompt=negative_prompt,
+                guidance_scale=guidance,
+                steps=steps
+            )
+
+        save_image(image, prompt)
+        save_history(prompt)
+
+        image_placeholder.image(
+            image,
+            caption=prompt,
+            use_container_width=True
         )
 
-    save_image(image, prompt)
-    save_history(prompt)
-
-    image_placeholder.image(
-        image,
-        caption=prompt,
-        use_container_width=True
-    )
-
-    st.success("Image generated successfully!")
-
-    try:
-        import io
+        st.success("Image generated successfully!")
 
         buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
+
+        image.save(
+            buffer,
+            format="PNG"
+        )
 
         st.download_button(
             label="📥 Download Image",
@@ -127,5 +127,13 @@ if generate:
             mime="image/png"
         )
 
-    except Exception:
-        pass
+    except Exception as e:
+
+        st.error(
+            f"Image generation failed: {e}"
+        )
+
+        st.info(
+            "The model may be unavailable on the current "
+            "Streamlit Cloud hardware. Please check the app logs."
+        )
