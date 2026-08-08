@@ -60,9 +60,9 @@ with left:
 
     steps = st.slider(
         "Inference Steps",
-        min_value=10,
-        max_value=50,
-        value=20
+        min_value=5,
+        max_value=20,
+        value=10
     )
 
     generate = st.button(

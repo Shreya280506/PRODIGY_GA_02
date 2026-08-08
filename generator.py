@@ -21,12 +21,20 @@ class ImageGenerator:
             MODEL_ID,
             torch_dtype=dtype,
             safety_checker=None,
-            requires_safety_checker=False
+            requires_safety_checker=False,
         )
 
-        self.pipe = self.pipe.to(self.device)
+        if self.device == "cuda":
+            self.pipe = self.pipe.to("cuda")
 
-        if self.device == "cpu":
+            # GPU memory optimization
+            self.pipe.enable_attention_slicing()
+
+        else:
+            # CPU mode
+            self.pipe = self.pipe.to("cpu")
+
+            # Reduce CPU memory usage
             self.pipe.enable_attention_slicing()
 
         print("Stable Diffusion loaded successfully.")
@@ -36,9 +44,9 @@ class ImageGenerator:
         prompt,
         negative_prompt="",
         guidance_scale=7.5,
-        steps=20,
-        width=512,
-        height=512,
+        steps=10,
+        width=384,
+        height=384,
     ):
 
         result = self.pipe(
