@@ -22,12 +22,13 @@ def load_generator():
 
 st.title("🎨 VisionCraft AI")
 st.markdown(
-    "Generate stunning AI images using **Stable Diffusion**."
+    "Generate stunning AI images using **AI image generation**."
 )
 
 st.divider()
 
 left, right = st.columns([1, 1])
+
 
 with left:
 
@@ -90,7 +91,7 @@ if generate:
     try:
 
         with st.spinner(
-            "Loading Stable Diffusion and generating your image..."
+            "Generating your image..."
         ):
 
             generator = load_generator()
@@ -128,13 +129,12 @@ if generate:
         )
 
     except Exception as e:
-    st.error(f"Image generation failed: {e}")
-    st.info(
-        "Please check your image-generation API configuration "
-        "and account balance."
-    )
+
+        st.error(
+            f"Image generation failed: {e}"
+        )
 
         st.info(
-            "The model may be unavailable on the current "
-            "Streamlit Cloud hardware. Please check the app logs."
+            "Please check the image-generation service "
+            "and try again."
         )
