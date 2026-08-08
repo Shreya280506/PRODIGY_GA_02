@@ -4,17 +4,19 @@ from datetime import datetime
 from config import OUTPUT_DIR
 
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-
 def save_image(image, prompt):
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    filename = f"{timestamp}_{prompt[:30].replace(' ','_')}.png"
+    filename = f"image_{timestamp}.png"
 
-    path = os.path.join(OUTPUT_DIR, filename)
+    filepath = os.path.join(
+        OUTPUT_DIR,
+        filename
+    )
 
-    image.save(path)
+    image.save(filepath)
 
-    return path
+    return filepath
