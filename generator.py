@@ -1,61 +1,55 @@
-import torch
-from diffusers import StableDiffusionPipeline
-from config import MODEL_ID
+import io
+import os
+
+import fal_client
+import requests
+import streamlit as st
+from PIL import Image
 
 
 class ImageGenerator:
 
     def __init__(self):
-        print("Loading Stable Diffusion...")
+        try:
+            self.api_key = st.secrets["FAL_KEY"]
+        except KeyError:
+            raise RuntimeError(
+                "FAL_KEY is not configured. "
+                "Add FAL_KEY to Streamlit Secrets."
+            )
 
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        if self.device == "cuda":
-            dtype = torch.float16
-        else:
-            dtype = torch.float32
-
-        print(f"Device: {self.device}")
-
-        self.pipe = StableDiffusionPipeline.from_pretrained(
-            MODEL_ID,
-            torch_dtype=dtype,
-            safety_checker=None,
-            requires_safety_checker=False,
-        )
-
-        if self.device == "cuda":
-            self.pipe = self.pipe.to("cuda")
-
-            # GPU memory optimization
-            self.pipe.enable_attention_slicing()
-
-        else:
-            # CPU mode
-            self.pipe = self.pipe.to("cpu")
-
-            # Reduce CPU memory usage
-            self.pipe.enable_attention_slicing()
-
-        print("Stable Diffusion loaded successfully.")
+        os.environ["FAL_KEY"] = self.api_key
 
     def generate(
         self,
         prompt,
         negative_prompt="",
-        guidance_scale=7.5,
-        steps=10,
-        width=384,
-        height=384,
+        guidance_scale=3.5,
+        steps=4,
+        width=512,
+        height=512,
     ):
 
-        result = self.pipe(
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale,
-            num_inference_steps=steps,
-            width=width,
-            height=height,
+        result = fal_client.subscribe(
+            "fal-ai/flux/schnell",
+            arguments={
+                "prompt": prompt,
+                "num_inference_steps": min(max(steps, 1), 4),
+                "guidance_scale": guidance_scale,
+                "image_size": {
+                    "width": width,
+                    "height": height,
+                },
+                "num_images": 1,
+                "output_format": "png",
+            },
         )
 
-        return result.images[0]
+        image_url = result["images"][0]["url"]
+
+        response = requests.get(image_url, timeout=120)
+        response.raise_for_status()
+
+        return Image.open(
+            io.BytesIO(response.content)
+        ).convert("RGB")
